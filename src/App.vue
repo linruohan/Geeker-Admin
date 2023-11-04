@@ -1,49 +1,44 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <div>
-    <a href="https://www.electronjs.org/" target="_blank">
-      <img src="./assets/electron.svg" class="logo electron" alt="Electron logo" />
-    </a>
-    <a href="https://vitejs.dev/" target="_blank">
-      <img src="./assets/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="Electron + Vite + Vue" />
-  <div class="flex-center">
-    Place static files into the <code>/public</code> folder
-    <img style="width: 2.4em; margin-left: .4em;" src="/logo.svg" alt="Logo">
-  </div>
+  <el-config-provider :locale="locale" :size="assemblySize" :button="buttonConfig">
+    <router-view></router-view>
+  </el-config-provider>
 </template>
 
-<style>
-.flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+<script setup lang="ts">
+import { onMounted, reactive, computed } from "vue";
+import { useI18n } from "vue-i18n";
+import { getBrowserLang } from "@/utils";
+import { useTheme } from "@/hooks/useTheme";
+import { ElConfigProvider } from "element-plus";
+import { LanguageType } from "./stores/interface";
+import { useGlobalStore } from "@/stores/modules/global";
+import en from "element-plus/es/locale/lang/en";
+import zhCn from "element-plus/es/locale/lang/zh-cn";
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
+const globalStore = useGlobalStore();
 
-.logo.electron:hover {
-  filter: drop-shadow(0 0 2em #9FEAF9);
-}
+// init theme
+const { initTheme } = useTheme();
+initTheme();
 
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
+// init language
+const i18n = useI18n();
+onMounted(() => {
+  const language = globalStore.language ?? getBrowserLang();
+  i18n.locale.value = language;
+  globalStore.setGlobalState("language", language as LanguageType);
+});
 
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>
+// element language
+const locale = computed(() => {
+  if (globalStore.language == "zh") return zhCn;
+  if (globalStore.language == "en") return en;
+  return getBrowserLang() == "zh" ? zhCn : en;
+});
+
+// element assemblySize
+const assemblySize = computed(() => globalStore.assemblySize);
+
+// element button config
+const buttonConfig = reactive({ autoInsertSpace: false });
+</script>

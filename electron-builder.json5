@@ -3,9 +3,9 @@
  */
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "YourAppID",
+  "appId": "mytool-id",
   "asar": true,
-  "productName": "YourAppName",
+  "productName": "mytool",
   "directories": {
     "output": "release/${version}"
   },
