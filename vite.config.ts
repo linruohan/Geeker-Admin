@@ -1,26 +1,114 @@
+import fs from 'node:fs'
+import vue from '@vitejs/plugin-vue'
+import electron from 'vite-plugin-electron/simple'
 import { defineConfig, loadEnv, ConfigEnv, UserConfig } from "vite";
-import { resolve } from "path";
 import { wrapperEnv } from "./build/getEnv";
 import { createProxy } from "./build/proxy";
-import { createVitePlugins } from "./build/plugins";
+import { createCompression,createVitePwa } from "./build/plugins";
 import pkg from "./package.json";
 import dayjs from "dayjs";
-
 const { dependencies, devDependencies, name, version } = pkg;
 const __APP_INFO__ = {
   pkg: { dependencies, devDependencies, name, version },
   lastBuildTime: dayjs().format("YYYY-MM-DD HH:mm:ss")
 };
-
-// @see: https://vitejs.dev/config/
-export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
+import { resolve } from "path";
+import { PluginOption } from "vite";
+import { VitePWA } from "vite-plugin-pwa";
+import { createHtmlPlugin } from "vite-plugin-html";
+import { visualizer } from "rollup-plugin-visualizer";
+import { createSvgIconsPlugin } from "vite-plugin-svg-icons";
+import vueJsx from "@vitejs/plugin-vue-jsx";
+import eslintPlugin from "vite-plugin-eslint";
+import viteCompression from "vite-plugin-compression";
+import vueSetupExtend from "unplugin-vue-setup-extend-plus/vite";
+// https://vitejs.dev/config/
+export default defineConfig(({ command }: ConfigEnv): UserConfig => {
+  fs.rmSync('dist-electron', { recursive: true, force: true })
   const root = process.cwd();
-  const env = loadEnv(mode, root);
+  const env = loadEnv(command, root);
   const viteEnv = wrapperEnv(env);
+
+  const isServe = command === 'serve'
+  const isBuild = command === 'build'
+  const sourcemap = isServe || !!process.env.VSCODE_DEBUG
 
   return {
     base: viteEnv.VITE_PUBLIC_PATH,
     root,
+    plugins: [
+      vue(),
+      vueJsx(),
+      // esLint 报错信息显示在浏览器界面上
+      eslintPlugin(),
+      // name 可以写在 script 标签上
+      vueSetupExtend({}),
+      // 创建打包压缩配置
+      createCompression(viteEnv),
+      // 注入变量到 html 文件
+      createHtmlPlugin({
+        minify: true,
+        viteNext: true,
+        inject: {
+          data: { title: viteEnv.VITE_GLOB_APP_TITLE }
+        }
+      }),
+      // 使用 svg 图标
+      createSvgIconsPlugin({
+        iconDirs: [resolve(process.cwd(), "src/assets/icons")],
+        symbolId: "icon-[dir]-[name]"
+      }),
+      // vitePWA
+      viteEnv.VITE_PWA && createVitePwa(viteEnv),
+      // 是否生成包预览，分析依赖包大小做优化处理
+      viteEnv.VITE_REPORT && (visualizer({ filename: "stats.html", gzipSize: true, brotliSize: true }) as PluginOption),
+      electron({
+        main: {
+          // Shortcut of `build.lib.entry`
+          entry: 'electron/main/index.ts',
+          onstart({ startup }) {
+            if (process.env.VSCODE_DEBUG) {
+              console.log(/* For `.vscode/.debug.script.mjs` */'[startup] Electron App')
+            } else {
+              startup()
+            }
+          },
+          vite: {
+            build: {
+              sourcemap,
+              minify: isBuild,
+              outDir: 'dist-electron/main',
+              rollupOptions: {
+                // Some third-party Node.js libraries may not be built correctly by Vite, especially `C/C++` addons, 
+                // we can use `external` to exclude them to ensure they work correctly.
+                // Others need to put them in `dependencies` to ensure they are collected into `app.asar` after the app is built.
+                // Of course, this is not absolute, just this way is relatively simple. :)
+                external: Object.keys('dependencies' in pkg ? pkg.dependencies : {}),
+              },
+            },
+          },
+        },
+        preload: {
+          // Shortcut of `build.rollupOptions.input`.
+          // Preload scripts may contain Web assets, so use the `build.rollupOptions.input` instead `build.lib.entry`.
+          input: 'electron/preload/index.ts',
+          vite: {
+            build: {
+              sourcemap: sourcemap ? 'inline' : undefined, // #332
+              minify: isBuild,
+              outDir: 'dist-electron/preload',
+              rollupOptions: {
+                external: Object.keys('dependencies' in pkg ? pkg.dependencies : {}),
+              },
+            },
+          },
+        },
+        // Ployfill the Electron and Node.js API for Renderer process.
+        // If you want use Node.js in Renderer process, the `nodeIntegration` needs to be enabled in the Main process.
+        // See 👉 https://github.com/electron-vite/vite-plugin-electron-renderer
+        renderer: {},
+      }),
+    ],
     resolve: {
       alias: {
         "@": resolve(__dirname, "./src"),
@@ -37,15 +125,19 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         }
       }
     },
-    server: {
-      host: "0.0.0.0",
-      port: viteEnv.VITE_PORT,
-      open: viteEnv.VITE_OPEN,
-      cors: true,
-      // Load proxy configuration from .env.development
-      proxy: createProxy(viteEnv.VITE_PROXY)
-    },
-    plugins: createVitePlugins(viteEnv),
+    // server: process.env.VSCODE_DEBUG && (() => {
+    server: (() => {
+      const url = new URL(pkg.debug.env.VITE_DEV_SERVER_URL)
+      return {
+        host: url.hostname,
+        port: +url.port,
+        // open: viteEnv.VITE_OPEN,
+        cors: true,
+        // Load proxy configuration from .env.development
+        proxy: createProxy(viteEnv.VITE_PROXY)
+      }
+    })(),
+    clearScreen: false,
     esbuild: {
       pure: viteEnv.VITE_DROP_CONSOLE ? ["console.log", "debugger"] : []
     },
@@ -75,4 +167,4 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       }
     }
   };
-});
+})

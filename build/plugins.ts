@@ -50,7 +50,7 @@ export const createVitePlugins = (viteEnv: ViteEnv): (PluginOption | PluginOptio
  * @description 根据 compress 配置，生成不同的压缩规则
  * @param viteEnv
  */
-const createCompression = (viteEnv: ViteEnv): PluginOption | PluginOption[] => {
+export const createCompression = (viteEnv: ViteEnv): PluginOption | PluginOption[] => {
   const { VITE_BUILD_COMPRESS = "none", VITE_BUILD_COMPRESS_DELETE_ORIGIN_FILE } = viteEnv;
   const compressList = VITE_BUILD_COMPRESS.split(",");
   const plugins: PluginOption[] = [];
@@ -79,7 +79,7 @@ const createCompression = (viteEnv: ViteEnv): PluginOption | PluginOption[] => {
  * @description VitePwa
  * @param viteEnv
  */
-const createVitePwa = (viteEnv: ViteEnv): PluginOption | PluginOption[] => {
+export const createVitePwa = (viteEnv: ViteEnv): PluginOption | PluginOption[] => {
   const { VITE_GLOB_APP_TITLE } = viteEnv;
   return VitePWA({
     registerType: "autoUpdate",

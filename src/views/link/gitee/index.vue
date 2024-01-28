@@ -2,7 +2,7 @@
   <div class="card content-box">
     <span class="text">
       Gitee 仓库：
-      <a href="https://gitee.com/HalseySpicy/Geeker-Admin" target="_blank">https://gitee.com/HalseySpicy/Geeker-Admin</a> 🍒🍉🍊
+      <a href="https://gitee.com/linruohan" target="_blank">https://gitee.com/linruohan</a> 🍒🍉🍊
     </span>
   </div>
 </template>

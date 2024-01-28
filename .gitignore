@@ -11,10 +11,12 @@ node_modules
 dist
 dist-ssr
 stats.html
+dist-electron
+release
 *.local
 
 # Editor directories and files
-.vscode/*
+.vscode/.debug.env
 !.vscode/extensions.json
 !.vscode/settings.json
 .idea
@@ -24,3 +26,8 @@ stats.html
 *.njsproj
 *.sln
 *.sw?
+
+# lockfile
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
