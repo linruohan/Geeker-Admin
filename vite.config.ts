@@ -1,11 +1,12 @@
 import fs from 'node:fs'
+import { fileURLToPath, URL } from "node:url"
 import vue from '@vitejs/plugin-vue'
 import electron from 'vite-plugin-electron/simple'
 import { defineConfig, loadEnv, ConfigEnv, UserConfig } from "vite";
 import { wrapperEnv } from "./build/getEnv";
 import { createProxy } from "./build/proxy";
 import { createCompression,createVitePwa } from "./build/plugins";
-import pkg from "./package.json";
+import pkg from './package.json'
 import dayjs from "dayjs";
 const { dependencies, devDependencies, name, version } = pkg;
 const __APP_INFO__ = {
@@ -111,9 +112,10 @@ export default defineConfig(({ command }: ConfigEnv): UserConfig => {
     ],
     resolve: {
       alias: {
-        "@": resolve(__dirname, "./src"),
+        "@": fileURLToPath(new URL("./src", import.meta.url)),
         "vue-i18n": "vue-i18n/dist/vue-i18n.cjs.js"
-      }
+      },
+      extensions: [".js", ".ts", ".json"],
     },
     define: {
       __APP_INFO__: JSON.stringify(__APP_INFO__)
@@ -165,6 +167,6 @@ export default defineConfig(({ command }: ConfigEnv): UserConfig => {
           assetFileNames: "assets/[ext]/[name]-[hash].[ext]"
         }
       }
-    }
+    } 
   };
 })

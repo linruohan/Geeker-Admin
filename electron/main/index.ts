@@ -1,10 +1,10 @@
-import { app, BrowserWindow, shell, ipcMain } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, type CookiesGetFilter, session, IpcMainEvent } from 'electron'
 import { release } from 'node:os'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+globalThis.__filename = fileURLToPath(import.meta.url)
+globalThis.__dirname = dirname(__filename)
 
 // The built directory structure
 //
@@ -44,10 +44,61 @@ const preload = join(__dirname, '../preload/index.mjs')
 const url = process.env.VITE_DEV_SERVER_URL
 const indexHtml = join(process.env.DIST, 'index.html')
 
+const listen = () => {
+  ipcMain.on("getCookie", (e: IpcMainEvent, options: CookiesGetFilter) => {
+    // 查询所有 cookies。
+    session.defaultSession.cookies
+      .get(options)
+      .then((cookies) => {
+        return { value: cookies };
+      })
+      .catch((error) => {
+        alert(error);
+        return { value: "" };
+      });
+  });
+  ipcMain.on(
+    "clearCookie",
+    (e: IpcMainEvent, options: { url: string; name: string }) => {
+      // 查询所有 cookies。
+      session.defaultSession.cookies.remove(options.url, options.name);
+    }
+  );
+  ipcMain.on("close", (event: IpcMainEvent) => win.destroy());
+  // 隐藏
+  ipcMain.on("window-hide", (event: IpcMainEvent) => {
+    win.hide();
+  });
+
+  // 显示
+  ipcMain.on("window-show", (event: IpcMainEvent) => {
+    win.show();
+  });
+
+  // 最小化
+  ipcMain.on("min", (event: IpcMainEvent) => {
+    win.minimize();
+  });
+
+  // 最大化
+  ipcMain.on("max", (event, winId) => {
+    win.maximize();
+  });
+};
 async function createWindow() {
+  listen()
   win = new BrowserWindow({
     title: 'Main window',
     icon: join(process.env.VITE_PUBLIC, 'favicon.ico'),
+    resizable: true,
+    autoHideMenuBar: true,
+    minimizable: true,
+    maximizable: true,
+    movable: true,
+    darkTheme: true,
+    minWidth: 0,
+    minHeight: 0,
+    titleBarStyle: "hidden",
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
@@ -55,7 +106,10 @@ async function createWindow() {
 
       // Consider using contextBridge.exposeInMainWorld
       // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
+      nodeIntegration: true,
       // contextIsolation: false,
+      devTools: true,
+      webSecurity: false,
     },
   })
 
@@ -66,7 +120,7 @@ async function createWindow() {
   } else {
     win.loadFile(indexHtml)
   }
-
+  win.maximize();
   // Test actively push message to the Electron-Renderer
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', new Date().toLocaleString())

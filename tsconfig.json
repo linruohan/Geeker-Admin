@@ -31,10 +31,12 @@
   },
   "include": [
     "src",
+    "env.d.ts",
     "src/**/*.ts",
     "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
+    "auto-imports.d.ts",
     "build/**/*.ts",
     "build/**/*.d.ts",
     "vite.config.ts"
