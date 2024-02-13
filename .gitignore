@@ -9,14 +9,14 @@ lerna-debug.log*
 
 node_modules
 dist
-dist-ssr
-stats.html
 dist-electron
 release
+dist-ssr
+stats.html
 *.local
 
 # Editor directories and files
-.vscode/.debug.env
+.vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
 .idea

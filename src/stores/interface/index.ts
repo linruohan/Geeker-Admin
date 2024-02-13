@@ -59,3 +59,13 @@ export interface AuthState {
 export interface KeepAliveState {
   keepAliveName: string[];
 }
+
+import { FLocation } from "@/api/interface";
+/** 日历 */
+export interface CalendarState {
+  themeValue: string;
+  showFestivals: boolean;
+  showWeather: boolean;
+  location: FLocation;
+  focusTime: number; // 专注时间
+}

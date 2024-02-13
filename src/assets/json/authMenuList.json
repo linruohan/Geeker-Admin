@@ -16,6 +16,20 @@
       }
     },
     {
+      "path": "/calendar/index",
+      "name": "calendar",
+      "component": "/calendar/index",
+      "meta": {
+        "icon": "InfoFilled",
+        "title": "日历",
+        "isLink": "",
+        "isHide": false,
+        "isFull": false,
+        "isAffix": false,
+        "isKeepAlive": true
+      }
+    },
+    {
       "path": "/assembly",
       "name": "assembly",
       "redirect": "/assembly/guide",

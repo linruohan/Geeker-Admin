@@ -1,12 +1,12 @@
-import fs from 'node:fs'
-import { fileURLToPath, URL } from "node:url"
-import vue from '@vitejs/plugin-vue'
-import electron from 'vite-plugin-electron/simple'
+import fs from "node:fs";
+import { fileURLToPath, URL } from "node:url";
+import vue from "@vitejs/plugin-vue";
+import electron from "vite-plugin-electron/simple";
 import { defineConfig, loadEnv, ConfigEnv, UserConfig } from "vite";
 import { wrapperEnv } from "./build/getEnv";
 import { createProxy } from "./build/proxy";
-import { createCompression,createVitePwa } from "./build/plugins";
-import pkg from './package.json'
+import { createCompression, createVitePwa } from "./build/plugins";
+import pkg from "./package.json";
 import dayjs from "dayjs";
 const { dependencies, devDependencies, name, version } = pkg;
 const __APP_INFO__ = {
@@ -15,24 +15,22 @@ const __APP_INFO__ = {
 };
 import { resolve } from "path";
 import { PluginOption } from "vite";
-import { VitePWA } from "vite-plugin-pwa";
 import { createHtmlPlugin } from "vite-plugin-html";
 import { visualizer } from "rollup-plugin-visualizer";
 import { createSvgIconsPlugin } from "vite-plugin-svg-icons";
 import vueJsx from "@vitejs/plugin-vue-jsx";
 import eslintPlugin from "vite-plugin-eslint";
-import viteCompression from "vite-plugin-compression";
 import vueSetupExtend from "unplugin-vue-setup-extend-plus/vite";
 // https://vitejs.dev/config/
 export default defineConfig(({ command }: ConfigEnv): UserConfig => {
-  fs.rmSync('dist-electron', { recursive: true, force: true })
+  fs.rmSync("dist-electron", { recursive: true, force: true });
   const root = process.cwd();
   const env = loadEnv(command, root);
   const viteEnv = wrapperEnv(env);
 
-  const isServe = command === 'serve'
-  const isBuild = command === 'build'
-  const sourcemap = isServe || !!process.env.VSCODE_DEBUG
+  const isServe = command === "serve";
+  const isBuild = command === "build";
+  const sourcemap = isServe || !!process.env.VSCODE_DEBUG;
 
   return {
     base: viteEnv.VITE_PUBLIC_PATH,
@@ -49,7 +47,7 @@ export default defineConfig(({ command }: ConfigEnv): UserConfig => {
       // 注入变量到 html 文件
       createHtmlPlugin({
         minify: true,
-        viteNext: true,
+        // viteNext: true,
         inject: {
           data: { title: viteEnv.VITE_GLOB_APP_TITLE }
         }
@@ -66,56 +64,56 @@ export default defineConfig(({ command }: ConfigEnv): UserConfig => {
       electron({
         main: {
           // Shortcut of `build.lib.entry`
-          entry: 'electron/main/index.ts',
+          entry: "electron/main/index.ts",
           onstart({ startup }) {
             if (process.env.VSCODE_DEBUG) {
-              console.log(/* For `.vscode/.debug.script.mjs` */'[startup] Electron App')
+              console.log(/* For `.vscode/.debug.script.mjs` */ "[startup] Electron App");
             } else {
-              startup()
+              startup();
             }
           },
           vite: {
             build: {
               sourcemap,
               minify: isBuild,
-              outDir: 'dist-electron/main',
+              outDir: "dist-electron/main",
               rollupOptions: {
-                // Some third-party Node.js libraries may not be built correctly by Vite, especially `C/C++` addons, 
+                // Some third-party Node.js libraries may not be built correctly by Vite, especially `C/C++` addons,
                 // we can use `external` to exclude them to ensure they work correctly.
                 // Others need to put them in `dependencies` to ensure they are collected into `app.asar` after the app is built.
                 // Of course, this is not absolute, just this way is relatively simple. :)
-                external: Object.keys('dependencies' in pkg ? pkg.dependencies : {}),
-              },
-            },
-          },
+                external: Object.keys("dependencies" in pkg ? pkg.dependencies : {})
+              }
+            }
+          }
         },
         preload: {
           // Shortcut of `build.rollupOptions.input`.
           // Preload scripts may contain Web assets, so use the `build.rollupOptions.input` instead `build.lib.entry`.
-          input: 'electron/preload/index.ts',
+          input: "electron/preload/index.ts",
           vite: {
             build: {
-              sourcemap: sourcemap ? 'inline' : undefined, // #332
+              sourcemap: sourcemap ? "inline" : undefined, // #332
               minify: isBuild,
-              outDir: 'dist-electron/preload',
+              outDir: "dist-electron/preload",
               rollupOptions: {
-                external: Object.keys('dependencies' in pkg ? pkg.dependencies : {}),
-              },
-            },
-          },
+                external: Object.keys("dependencies" in pkg ? pkg.dependencies : {})
+              }
+            }
+          }
         },
         // Ployfill the Electron and Node.js API for Renderer process.
         // If you want use Node.js in Renderer process, the `nodeIntegration` needs to be enabled in the Main process.
         // See 👉 https://github.com/electron-vite/vite-plugin-electron-renderer
-        renderer: {},
-      }),
+        renderer: {}
+      })
     ],
     resolve: {
       alias: {
         "@": fileURLToPath(new URL("./src", import.meta.url)),
         "vue-i18n": "vue-i18n/dist/vue-i18n.cjs.js"
       },
-      extensions: [".js", ".ts", ".json"],
+      extensions: [".js", ".ts", ".json"]
     },
     define: {
       __APP_INFO__: JSON.stringify(__APP_INFO__)
@@ -129,7 +127,7 @@ export default defineConfig(({ command }: ConfigEnv): UserConfig => {
     },
     // server: process.env.VSCODE_DEBUG && (() => {
     server: (() => {
-      const url = new URL(pkg.debug.env.VITE_DEV_SERVER_URL)
+      const url = new URL(pkg.debug.env.VITE_DEV_SERVER_URL);
       return {
         host: url.hostname,
         port: +url.port,
@@ -137,7 +135,7 @@ export default defineConfig(({ command }: ConfigEnv): UserConfig => {
         cors: true,
         // Load proxy configuration from .env.development
         proxy: createProxy(viteEnv.VITE_PROXY)
-      }
+      };
     })(),
     clearScreen: false,
     esbuild: {
@@ -167,6 +165,6 @@ export default defineConfig(({ command }: ConfigEnv): UserConfig => {
           assetFileNames: "assets/[ext]/[name]-[hash].[ext]"
         }
       }
-    } 
+    }
   };
-})
+});
