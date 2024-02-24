@@ -38,7 +38,7 @@ import { computed } from "vue";
 import { watch } from "vue";
 import eventsjson from "@/assets/json/events.json";
 const props = defineProps({
-  events: { type: Array, default: eventsjson as EventInput[] },
+  events: { type: Array<EventInput>, default: eventsjson as EventSourceInput },
   changeShowFestivals: { type: Boolean, default: true },
   changeShowWeather: { type: Boolean, default: true }
 });
