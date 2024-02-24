@@ -1,0 +1,12 @@
+[
+  {
+    "id": "0",
+    "title": "All-day event",
+    "start": "2024-02-13"
+  },
+  {
+    "id": "1",
+    "title": "Timed event",
+    "start": "2024-02-13"
+  }
+]
