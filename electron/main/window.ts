@@ -1,18 +1,11 @@
-import {
-  BrowserWindow,
-  session,
-  ipcMain,
-  type CookiesGetFilter,
-} from "electron";
+import { BrowserWindow, session, ipcMain } from "electron";
 
 export const handleWindow = (mainWindow: BrowserWindow) => {
   ipcMain.on("handleWindow", (e, type) => {
     if (type === "minWindow") {
       mainWindow.minimize();
     } else if (type === "maxWindow") {
-      mainWindow.isMaximized()
-        ? mainWindow.unmaximize()
-        : mainWindow.maximize();
+      mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize();
     } else {
       mainWindow.destroy();
     }
@@ -23,15 +16,11 @@ export const handleWindow = (mainWindow: BrowserWindow) => {
 
 export const setReferer = () => {
   const filter = {
-    urls: ["*://*/*"],
+    urls: ["*://*/*"]
   };
-  session.defaultSession.webRequest.onBeforeSendHeaders(
-    filter,
-    (details, callback) => {
-      details.requestHeaders["origin"] = "https://www.bilibili.com";
-      details.requestHeaders["referer"] = "https://www.bilibili.com";
-      callback({ requestHeaders: details.requestHeaders });
-    }
-  );
+  session.defaultSession.webRequest.onBeforeSendHeaders(filter, (details, callback) => {
+    details.requestHeaders["origin"] = "https://www.bilibili.com";
+    details.requestHeaders["referer"] = "https://www.bilibili.com";
+    callback({ requestHeaders: details.requestHeaders });
+  });
 };
-

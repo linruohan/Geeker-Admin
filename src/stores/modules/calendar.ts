@@ -3,7 +3,7 @@ import { CalendarState } from "@/stores/interface";
 import { FLocation } from "@/api/interface";
 
 export const useCalendarStore = defineStore({
-  id: "mytool-auth",
+  id: "mytool-calendar",
   state: (): CalendarState => ({
     themeValue: "lightTheme",
     showFestivals: false,

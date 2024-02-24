@@ -1,4 +1,4 @@
-import { Solar, Lunar } from "lunar-typescript";
+import { Solar, Lunar, Holiday, HolidayUtil, Tao } from "lunar-typescript";
 
 /**
  * 显示日期相关功能
@@ -6,10 +6,14 @@ import { Solar, Lunar } from "lunar-typescript";
 export default class LunarService {
   lunar: Lunar;
   solar: Solar;
+  holiday: Holiday | null;
+  tao: Tao;
 
   constructor(date: Date = new Date()) {
     this.lunar = Lunar.fromDate(date);
     this.solar = Solar.fromDate(date);
+    this.holiday = HolidayUtil.getHoliday(date.getFullYear(), date.getMonth() + 1, date.getDate());
+    this.tao = Tao.fromLunar(Lunar.fromDate(date));
   }
 
   /**
@@ -50,6 +54,7 @@ export default class LunarService {
    * @returns 获取黄历页面需要得数据
    */
   getDateViewDate(): LunarServiceResult {
+    console.log(this.holiday);
     const nongliString = `农历${this.lunar.getMonthInChinese()}月${this.lunar.getDayInChinese()}`;
 
     const ganzhi = [
@@ -63,13 +68,30 @@ export default class LunarService {
     const yi = this.lunar.getDayYi();
 
     const ji = this.lunar.getDayJi();
+    // 节假日
+    let holidayDay = "";
+    let holidayName = "";
+    let holidayIsWork = false;
+    let holidayTarget = "";
+    if (this.holiday) {
+      holidayDay = this.holiday.getDay();
+      holidayName = this.holiday.getName();
+      holidayIsWork = this.holiday.isWork();
+      holidayTarget = this.holiday.getTarget();
+    }
+    const taoString = this.tao.toFullString();
 
     return {
       nongliString: nongliString,
       ganzhi: ganzhi,
       yangliString: yangliString,
       yi: yi,
-      ji: ji
+      ji: ji,
+      holidayDay: holidayDay,
+      holidayName: holidayName,
+      holidayIsWork: holidayIsWork,
+      holidayTarget: holidayTarget,
+      taoString: taoString
     };
   }
 }
@@ -80,4 +102,9 @@ export declare interface LunarServiceResult {
   yangliString: string;
   yi: string[];
   ji: string[];
+  holidayDay: string;
+  holidayName: string;
+  holidayIsWork: boolean;
+  holidayTarget: string;
+  taoString: string;
 }

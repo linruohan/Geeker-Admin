@@ -4,48 +4,31 @@
   </n-config-provider>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, provide, computed } from "vue";
+<script lang="ts" setup>
+import { ref, provide, computed } from "vue";
 import type { GlobalTheme } from "naive-ui";
 import { NConfigProvider, darkTheme } from "naive-ui";
 import FanlyCountdownClock from "/@/components/FanlyCountdownClock.vue";
 import Moment from "moment";
+import router from "@/routers";
 import { useCalendarStore } from "@/stores/modules/calendar";
+const store = useCalendarStore();
+const deadline = computed(() => Moment().add(store.focusTime, "minute").format());
+const Title = ref("专注还剩时间");
 
-export default defineComponent({
-  name: "FocusViewSub",
-  components: {
-    NConfigProvider,
-    FanlyCountdownClock
-  },
-  provide() {
-    return {
-      deadline: computed(() => Moment().add(this.store.focusTime, "minute").format())
-    };
-  },
-  setup() {
-    const Title = ref("专注还剩时间");
-    provide("title", Title);
-    provide("height", window.screen.height);
-    const store = useCalendarStore();
-    provide("store", store);
-    return {
-      store,
-      darkTheme
-    };
-  },
-  computed: {
-    themeValue(): GlobalTheme | null {
-      return this.store.themeValue == "darkTheme" ? darkTheme : null;
-    }
-  },
-  methods: {
-    hideFocus() {
-      this.$router.replace({ path: "/" });
-      window.ipcRenderer.send("hide-focus-window");
-    }
-  }
+provide("deadline", deadline);
+provide("title", Title);
+provide("height", window.screen.height);
+provide("store", store);
+
+const themeValue = computed((): GlobalTheme | null => {
+  return store.themeValue == "darkTheme" ? darkTheme : null;
 });
+
+const hideFocus = () => {
+  router.replace({ path: "/" });
+  window.ipcRenderer.send("hide-focus-window");
+};
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

@@ -24,93 +24,62 @@
   </n-card>
 </template>
 
-<script lang="ts">
-import { defineComponent, inject } from "vue";
+<script lang="ts" setup>
+import { computed, inject } from "vue";
 import { NButton, NIcon, NGrid, NGi, NCard } from "naive-ui";
 import { TimesCircleRegular as TimesCircleRegularIcon } from "@vicons/fa";
+import { onMounted } from "vue";
+import { ref } from "vue";
 
-export default defineComponent({
-  name: "FanlyCountdownClock",
-  components: {
-    NButton,
-    NIcon,
-    TimesCircleRegularIcon,
-    NGrid,
-    NGi,
-    NCard
-  },
-  props: {
-    speed: {
-      type: Number,
-      default: 1000
-    }
-  },
-  emits: ["finish"],
-  setup() {
-    const deadline = inject("deadline");
-    const title = inject("title", "");
-    const height = inject("height", 600);
-    return {
-      deadline,
-      title,
-      height
-    };
-  },
-  data() {
-    return {
-      currentTime: Date.parse(String(this.deadline)) - new Date().valueOf()
-    };
-  },
-  computed: {
-    style(): unknown {
-      return {
-        height: this.height + "px"
-      };
-    },
-    seconds(): number {
-      return Math.floor((this.currentTime / 1000) % 60);
-    },
-    minutes(): number {
-      return Math.floor((this.currentTime / 1000 / 60) % 60);
-    },
-    hours(): number {
-      return Math.floor((this.currentTime / (1000 * 60 * 60)) % 24);
-    },
-    days(): number {
-      return Math.floor(this.currentTime / (1000 * 60 * 60 * 24));
-    },
-    cols(): number {
-      if (this.days > 0) {
-        return 4;
-      }
-
-      if (this.hours > 0) {
-        return 3;
-      }
-
-      return 2;
-    }
-  },
-  mounted() {
-    setTimeout(this.countdown, 1000);
-  },
-  methods: {
-    formatTime(value: number): string {
-      if (value < 10) {
-        return "0" + value;
-      }
-      return value.toString();
-    },
-    countdown() {
-      this.currentTime = Date.parse(String(this.deadline)) - new Date().valueOf();
-      if (this.currentTime > 0) {
-        setTimeout(this.countdown, this.speed);
-      } else {
-        this.$emit("finish");
-      }
-    }
-  }
+const props = defineProps<{ speed: Number | undefined }>();
+const emit = defineEmits(["finish"]);
+const deadline = inject("deadline");
+const title = inject("title", "");
+const height = inject("height", 600);
+const currentTime = ref(Date.parse(String(deadline)) - new Date().valueOf());
+const style = computed((): string => {
+  return "height:" + height + "px";
 });
+const seconds = computed((): number => {
+  return Math.floor((currentTime.value / 1000) % 60);
+});
+const minutes = computed((): number => {
+  return Math.floor((currentTime.value / 1000 / 60) % 60);
+});
+const hours = computed((): number => {
+  return Math.floor((currentTime.value / (1000 * 60 * 60)) % 24);
+});
+const days = computed((): number => {
+  return Math.floor(currentTime.value / (1000 * 60 * 60 * 24));
+});
+const cols = computed((): number => {
+  if (days.value > 0) {
+    return 4;
+  }
+  if (hours.value > 0) {
+    return 3;
+  }
+  return 2;
+});
+
+onMounted(() => {
+  setTimeout(countdown, 1000);
+});
+const formatTime = (value: number): string => {
+  if (value < 10) {
+    return "0" + value;
+  }
+  return value.toString();
+};
+const countdown = () => {
+  currentTime.value = Date.parse(String(deadline)) - new Date().valueOf();
+  if (currentTime.value > 0) {
+    console.log(props.speed);
+    setTimeout(countdown, 1000);
+  } else {
+    emit("finish");
+  }
+};
 </script>
 <style scoped lang="scss">
 ::v-deep(.n-card__content) {

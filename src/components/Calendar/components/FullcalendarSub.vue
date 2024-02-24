@@ -1,5 +1,3 @@
-<!-- eslint-disable @typescript-eslint/no-this-alias -->
-<!-- eslint-disable prettier/prettier -->
 <template>
   <n-config-provider :theme="themeValue">
     <n-card style="--padding-top: 0; --padding-bottom: 0; --padding-left: 0; --padding-right: 0">
@@ -13,23 +11,22 @@
     </n-card>
   </n-config-provider>
 </template>
-<script lang="ts">
-import { defineComponent, onMounted, ref, inject } from "vue";
+<script lang="ts" setup>
+import { onMounted, ref, inject, reactive } from "vue";
 import type { GlobalTheme } from "naive-ui";
 import { darkTheme, NCard, NElement as NEl, useThemeVars, NConfigProvider } from "naive-ui";
 import FullCalendar from "@fullcalendar/vue3";
-import type {
-  CustomButtonInput,
-  CalendarApi,
-  CalendarOptions,
-  DateSelectArg,
-  EventClickArg,
-  EventApi,
-  EventInput,
-  EventSourceInput,
-  DateRangeInput,
-  DateInput,
-  DayCellContentArg
+import {
+  type CustomButtonInput,
+  type CalendarApi,
+  type CalendarOptions,
+  type DateSelectArg,
+  type EventClickArg,
+  type EventApi,
+  type EventInput,
+  type EventSourceInput,
+  type DateRangeInput,
+  type DateInput
 } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -37,190 +34,173 @@ import zhLocale from "@fullcalendar/core/locales/zh-cn";
 import type { WeatherValueMap } from "@/api/interface";
 import CalendarViewService from "@/api/modules/calendarViewService";
 import { useCalendarStore } from "@/stores/modules/calendar";
-let eventGuid = 0;
-const createEventId = () => {
-  return String(eventGuid++);
+import { computed } from "vue";
+import { watch } from "vue";
+import eventsjson from "@/assets/json/events.json";
+const props = defineProps({
+  events: { type: Array, default: eventsjson as EventInput[] },
+  changeShowFestivals: { type: Boolean, default: true },
+  changeShowWeather: { type: Boolean, default: true }
+});
+
+const emit = defineEmits(["dateClick", "eventClick", "eventAdd", "settingClick"]);
+const weather = inject("weather", {} as WeatherValueMap);
+const store = useCalendarStore();
+const themeVars = ref(useThemeVars());
+const fc_today_bg_color = ref(themeVars.value.primaryColor);
+const fullcalendar = ref(null);
+let fullcalendarApi = ref<CalendarApi>();
+onMounted(() => {
+  fullcalendarApi.value = Object.getOwnPropertyDescriptor(fullcalendar.value, "getApi")?.value();
+});
+const CustomViewConfig = {
+  classNames: ["custom-view"],
+  content: function (props) {
+    // let segs = sliceEvents(props, true); // allDay=true
+    const date = props.dateProfile.currentRange.start.toUTCString();
+    const calendarViewService = new CalendarViewService();
+    return calendarViewService.showView(date, date, props.changeShowFestivals, props.changeShowWeather, weather);
+    // return { html: html };
+  }
 };
-export default defineComponent({
-  name: "FullcalendarSub",
-  components: {
-    NCard,
-    NEl,
-    NConfigProvider,
-    FullCalendar
-  },
-  props: {
-    changeShowFestivals: Boolean,
-    changeShowWeather: Boolean,
-    events: {
-      type: Array,
-      default: [] as EventInput[]
+const currentEvents = ref([] as EventApi[]);
+
+const themeValue = computed((): GlobalTheme | null => {
+  updateColors();
+  return store.themeValue == "darkTheme" ? darkTheme : null;
+});
+watch(
+  () => props.changeShowFestivals,
+  newval => {
+    console.log(newval);
+    updateView();
+  }
+);
+watch(
+  () => props.changeShowWeather,
+  newval => {
+    console.log(newval);
+    updateView();
+  }
+);
+watch(weather, () => {
+  updateView();
+});
+watch(
+  () => props.events,
+  newval => {
+    console.log(newval);
+    if (fullcalendarApi.value == null) {
+      fullcalendarApi.value = Object.getOwnPropertyDescriptor(fullcalendar, "getApi")?.value();
     }
+    fullcalendarApi.value?.removeAllEventSources();
+    fullcalendarApi.value?.addEventSource(props.events as EventSourceInput);
+  }
+);
+
+const updateColors = () => {
+  calendarOptions.eventColor = themeVars.value.primaryColor;
+  fc_today_bg_color.value = convertHexToRGBA(themeVars.value.primaryColor, Number(themeVars.value.opacity5));
+};
+const updateView = () => {
+  if (fullcalendarApi.value == null) {
+    fullcalendarApi.value = Object.getOwnPropertyDescriptor(fullcalendar, "getApi")?.value();
+  }
+  fullcalendarApi.value?.changeView("dayGridMonth", CustomViewConfig["dayGridMonth"] as DateRangeInput | DateInput);
+};
+
+const handleEvents = (events: EventApi[]) => {
+  currentEvents.value = events;
+};
+const dateClick = (selectInfo: DateSelectArg) => {
+  emit("dateClick", selectInfo.start);
+};
+const eventClick = (clickInfo: EventClickArg): void => {
+  emit("eventClick", clickInfo.event);
+};
+const eventAdd = (): void => {
+  emit("eventAdd");
+};
+const settingClick = (): void => {
+  emit("settingClick");
+};
+const convertHexToRGBA = (hex: string, opacity: number) => {
+  const tempHex = hex.replace("#", "");
+  const r = parseInt(tempHex.substring(0, 2), 16);
+  const g = parseInt(tempHex.substring(2, 4), 16);
+  const b = parseInt(tempHex.substring(4, 6), 16);
+
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+};
+// let eventGuid = 0;
+// const createEventId = () => {
+//   return String(eventGuid++);
+// };
+// const handleEventClick = (clickInfo: EventClickArg) => {
+//   if (confirm(`Are you sure you want to delete the event '${clickInfo.event.title}'`)) {
+//     clickInfo.event.remove();
+//   }
+// };
+// const handleDateSelect = (selectInfo: DateSelectArg) => {
+//   let title = prompt("Please enter a new title for your event");
+//   let calendarApi = selectInfo.view.calendar;
+
+//   calendarApi.unselect(); // clear date selection
+//   if (title) {
+//     calendarApi.addEvent({
+//       id: createEventId(),
+//       title,
+//       start: selectInfo.startStr,
+//       end: selectInfo.endStr,
+//       allDay: selectInfo.allDay
+//     });
+//   }
+// };
+
+// const handleWeekendsToggle = () => {
+//   calendarOptions.weekends = !calendarOptions.weekends; // update a property
+// };
+const calendarOptions = reactive<CalendarOptions>({
+  plugins: [
+    dayGridPlugin,
+    interactionPlugin // needed for dateClick
+  ],
+  customButtons: {
+    settingButton: {
+      icon: "setting",
+      click: settingClick
+    } as CustomButtonInput,
+    addEventButton: {
+      icon: "plus-square",
+      click: eventAdd
+    } as CustomButtonInput
   },
-  emits: ["dateClick", "eventClick", "settingClick"],
-  setup() {
-    const weather = inject("weather", {} as WeatherValueMap);
-    const store = useCalendarStore();
-    const themeVars = ref(useThemeVars());
-    const fc_today_bg_color = ref(themeVars.value.primaryColor);
-    const fullcalendar = ref(null);
-    let fullcalendarApi = ref<CalendarApi>();
-    onMounted(() => {
-      fullcalendarApi.value = Object.getOwnPropertyDescriptor(fullcalendar.value, "getApi")?.value();
-    });
-    return {
-      weather,
-      darkTheme,
-      store,
-      themeVars,
-      fc_today_bg_color,
-      fullcalendar,
-      fullcalendarApi
-    };
+  headerToolbar: {
+    left: "settingButton",
+    center: "title",
+    right: "addEventButton,prev,next"
   },
-  data() {
-    return {
-      calendarOptions: {
-        plugins: [
-          dayGridPlugin,
-          interactionPlugin // needed for dateClick
-        ],
-        customButtons: {
-          settingButton: {
-            icon: "setting",
-            click: this.settingClick
-          } as CustomButtonInput
-        } as unknown,
-        headerToolbar: {
-          left: "settingButton",
-          center: "title",
-          right: "prev,next"
-        },
-        select: this.dateClick,
-        eventClick: this.eventClick,
-        eventsSet: this.handleEvents,
-        /* you can update a remote database when these fire:
+  select: dateClick,
+  eventClick: eventClick,
+  eventsSet: handleEvents,
+  /* you can update a remote database when these fire:
         eventAdd:
         eventChange:
         eventRemove:
         */
-        initialView: "dayGridMonth",
-        initialEvents: this.events,
-        dayMaxEvents: true,
-        selectable: true,
-        editable: false,
-        weekends: true,
-        footerToolbar: false,
-        height: Number(import.meta.env.VITE_APP_HEIGHT) - 4,
-        aspectRatio: 1,
-        fixedWeekCount: false,
-        handleWindowResize: false,
-        views: this.dayCellNewContent(),
-        locale: zhLocale
-      } as CalendarOptions,
-      currentEvents: [] as EventApi[]
-    };
-  },
-  computed: {
-    themeValue(): GlobalTheme | null {
-      this.updateColors();
-      return this.store.themeValue == "darkTheme" ? darkTheme : null;
-    }
-  },
-  watch: {
-    changeShowFestivals(): void {
-      this.updateView();
-    },
-    changeShowWeather(): void {
-      this.updateView();
-    },
-    weather(): void {
-      this.updateView();
-    },
-    events(): void {
-      if (this.fullcalendarApi == null) {
-        this.fullcalendarApi = Object.getOwnPropertyDescriptor(this.fullcalendar, "getApi")?.value();
-      }
-      this.fullcalendarApi?.removeAllEventSources();
-      this.fullcalendarApi?.addEventSource(this.events as EventSourceInput);
-    }
-  },
-  methods: {
-    handleWeekendsToggle() {
-      this.calendarOptions.weekends = !this.calendarOptions.weekends; // update a property
-    },
-    updateColors() {
-      this.calendarOptions.eventColor = this.themeVars.primaryColor;
-      this.fc_today_bg_color = this.convertHexToRGBA(this.themeVars.primaryColor, Number(this.themeVars.opacity5));
-    },
-    updateView() {
-      if (this.fullcalendarApi == null) {
-        this.fullcalendarApi = Object.getOwnPropertyDescriptor(this.fullcalendar, "getApi")?.value();
-      }
-      const viewContent = this.dayCellNewContent();
-      this.fullcalendarApi?.changeView("dayGridMonth", viewContent["dayGridMonth"] as DateRangeInput | DateInput);
-    },
-    handleDateSelect(selectInfo: DateSelectArg) {
-      let title = prompt("Please enter a new title for your event");
-      let calendarApi = selectInfo.view.calendar;
-
-      calendarApi.unselect(); // clear date selection
-      if (title) {
-        calendarApi.addEvent({
-          id: createEventId(),
-          title,
-          start: selectInfo.startStr,
-          end: selectInfo.endStr,
-          allDay: selectInfo.allDay
-        });
-      }
-    },
-    handleEventClick(clickInfo: EventClickArg) {
-      if (confirm(`Are you sure you want to delete the event '${clickInfo.event.title}'`)) {
-        clickInfo.event.remove();
-      }
-    },
-    handleEvents(events: EventApi[]) {
-      this.currentEvents = events;
-    },
-    dateClick(selectInfo: DateSelectArg) {
-      this.$emit("dateClick", selectInfo.start);
-    },
-    eventClick(clickInfo: EventClickArg): void {
-      this.$emit("eventClick", clickInfo.event);
-    },
-    settingClick(): void {
-      this.$emit("settingClick");
-    },
-    convertHexToRGBA(hex: string, opacity: number) {
-      const tempHex = hex.replace("#", "");
-      const r = parseInt(tempHex.substring(0, 2), 16);
-      const g = parseInt(tempHex.substring(2, 4), 16);
-      const b = parseInt(tempHex.substring(4, 6), 16);
-
-      return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-    },
-    dayCellNewContent() {
-      // eslint-disable-next-line @typescript-eslint/no-this-alias
-      const it = this;
-      return {
-        dayGridMonth: {
-          titleFormat: { year: "numeric", month: "2-digit" },
-          dayCellContent(item: DayCellContentArg) {
-            const date = new Date(item.date);
-            const calendarViewService = new CalendarViewService();
-            return calendarViewService.showView(
-              item.dayNumberText,
-              date,
-              it.changeShowFestivals,
-              it.changeShowWeather,
-              it.weather
-            );
-          }
-        }
-      };
-    }
-  }
+  initialView: "dayGridMonth",
+  initialEvents: props.events,
+  dayMaxEvents: true,
+  selectable: true,
+  editable: false,
+  weekends: true,
+  footerToolbar: false,
+  height: Number(import.meta.env.VITE_APP_HEIGHT) - 4,
+  aspectRatio: 1,
+  fixedWeekCount: false,
+  handleWindowResize: false,
+  views: { custom: CustomViewConfig },
+  locale: zhLocale
 });
 </script>
 
@@ -238,7 +218,7 @@ export default defineComponent({
   background-color: var(--base-color, #2c3e50);
   border-color: var(--border-color, #2c3e50);
 }
-
+// ::v-deep(.fc .fc-addEventButton-button),
 ::v-deep(.fc .fc-settingButton-button) {
   border-color: var(--base-color);
 }

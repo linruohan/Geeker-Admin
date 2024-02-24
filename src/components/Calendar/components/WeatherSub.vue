@@ -4,43 +4,27 @@
   </n-badge>
 </template>
 
-<script lang="ts">
-import { defineComponent, inject } from "vue";
+<script lang="ts" setup>
+import { computed, inject } from "vue";
 import { NBadge, NImage } from "naive-ui";
 import WeatherService from "@/api/modules/WeatherService";
-
-export default defineComponent({
-  name: "WeatherSub",
-  components: {
-    NBadge,
-    NImage
-  },
-  setup() {
-    const weather = inject("weather", {
-      weatherNow: {
-        icon: "100",
-        temp: "30"
-      }
-    });
-    return {
-      weather
-    };
-  },
-  computed: {
-    weatherIcon(): string {
-      if (this.weather.weatherNow) {
-        return WeatherService.getIcon(this.weather.weatherNow.icon);
-      }
-
-      return "";
-    },
-    temp(): string {
-      if (this.weather.weatherNow) {
-        return this.weather.weatherNow.temp + "°C";
-      }
-      return "";
-    }
+const weather = inject("weather", {
+  weatherNow: {
+    icon: "100",
+    temp: "30"
   }
+});
+const weatherIcon = computed((): string => {
+  if (weather.weatherNow) {
+    return WeatherService.getIcon(weather.weatherNow.icon);
+  }
+  return "";
+});
+const temp = computed((): string => {
+  if (weather.weatherNow) {
+    return weather.weatherNow.temp + "°C";
+  }
+  return "";
 });
 </script>
 

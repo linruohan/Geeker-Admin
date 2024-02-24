@@ -38,21 +38,21 @@
         <n-grid :x-gap="12" :cols="1">
           <n-grid-item>
             <h4>显示节假日(农历)</h4>
-            <n-switch v-model:value="trayFestivalsModel" size="large" @update-value="updateTraySetting" />
+            <n-switch v-model:value="data.trayFestivalsModel" size="large" @update-value="updateTraySetting" />
           </n-grid-item>
           <n-grid-item>
             <h4>显示星期</h4>
-            <n-switch v-model:value="trayWeekModel" size="large" @update-value="updateTraySetting" />
+            <n-switch v-model:value="data.trayWeekModel" size="large" @update-value="updateTraySetting" />
           </n-grid-item>
           <n-grid-item>
             <h4>显示秒钟</h4>
-            <n-switch v-model:value="traySecondsModel" size="large" @update-value="updateTraySetting" />
+            <n-switch v-model:value="data.traySecondsModel" size="large" @update-value="updateTraySetting" />
           </n-grid-item>
         </n-grid>
       </n-tab-pane>
       <n-tab-pane name="focusSetting" tab="专注设置" display-directive="show">
         <n-space vertical>
-          <n-slider v-model:value="focus_time" :step="5" :min="5" :max="120" />
+          <n-slider v-model:value="data.focus_time" :step="5" :min="5" :max="120" />
           <n-button type="primary" size="large" @click="focus">
             <template #icon>
               <n-icon>
@@ -67,9 +67,9 @@
   </n-drawer-content>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import type { ComputedRef } from "vue";
-import { defineComponent, ref, inject } from "vue";
+import { ref, inject, reactive } from "vue";
 import { useCalendarStore } from "@/stores/modules/calendar";
 import {
   NDrawerContent,
@@ -89,113 +89,75 @@ import {
 } from "naive-ui";
 import { CaretRight as CaretRightIcon } from "@vicons/fa";
 import type { FLocation } from "@/api/interface";
-
-export default defineComponent({
-  name: "SettingSub",
-  components: {
-    NDrawerContent,
-    NTabs,
-    NTabPane,
-    NSpace,
-    NRadioGroup,
-    NRadioButton,
-    NSwitch,
-    NInputNumber,
-    NButton,
-    NDivider,
-    NIcon,
-    CaretRightIcon,
-    NSlider,
-    NGrid,
-    NGridItem
+import { computed } from "vue";
+import { onMounted } from "vue";
+const props = defineProps({
+  changeShowFestivals: {
+    type: Boolean,
+    default: false
   },
-  props: {
-    changeShowFestivals: {
-      type: Boolean,
-      default: false
-    },
-    changeShowWeather: {
-      type: Boolean,
-      default: false
-    }
-  },
-  emits: [
-    "focusClick",
-    "goCreateEventView",
-    "update:visibleFullSetting",
-    "update:changeShowFestivals",
-    "update:changeShowWeather",
-    "updateLocation"
-  ],
-  setup(props) {
-    const store = useCalendarStore();
-    const themeValue = ref(store.themeValue);
-    const inputSwitchFestivalsModel = ref(props.changeShowFestivals);
-    const inputSwitchWeatherModel = ref(props.changeShowWeather);
-    const flocation: ComputedRef<FLocation> | undefined = inject("flocation");
-    const longitude = flocation?.value.longitude;
-    const latitude = flocation?.value.latitude;
-
-    return {
-      store,
-      themeValue,
-      inputSwitchFestivalsModel,
-      inputSwitchWeatherModel,
-      longitude,
-      latitude
-    };
-  },
-  data() {
-    return {
-      trayFestivalsModel: false,
-      trayWeatherModel: false,
-      trayWeekModel: false,
-      traySecondsModel: false,
-      focus_time: 40
-    };
-  },
-  computed: {
-    // 计算属性的 getter
-    focusLabel(): string {
-      return "开始专注" + this.focus_time + "分钟";
-    }
-  },
-  mounted() {
-    this.focus_time = this.store.focusTime;
-  },
-  methods: {
-    updateTheme(value: string): void {
-      this.store.changeThemeValue(value);
-    },
-    updateFestivalsModel(value: boolean): void {
-      this.$emit("update:changeShowFestivals", value);
-    },
-    updateWeatherModel(value: boolean): void {
-      this.$emit("update:changeShowWeather", value);
-    },
-    changeLocalLocation(): void {
-      this.$emit("updateLocation", {
-        longitude: this.longitude,
-        latitude: this.latitude
-      });
-    },
-    updateTraySetting(): void {
-      window.ipcRenderer.send("updateTraySetting", {
-        trayFestivalsModel: this.trayFestivalsModel,
-        trayWeatherModel: this.trayWeatherModel,
-        trayWeekModel: this.trayWeekModel,
-        traySecondsModel: this.traySecondsModel
-      });
-    },
-
-    focus(): void {
-      this.store.changeFocusTime(this.focus_time);
-      this.$emit("focusClick");
-      window.ipcRenderer.send("show-focus-window");
-    },
-    quit(): void {
-      window.ipcRenderer.send("quit");
-    }
-  }
+  changeShowWeather: { type: Boolean, default: true }
 });
+
+const emit = defineEmits([
+  "focusClick",
+  "goCreateEventView",
+  "update:visibleFullSetting",
+  "update:changeShowFestivals",
+  "update:changeShowWeather",
+  "updateLocation"
+]);
+const store = useCalendarStore();
+const themeValue = ref(store.themeValue);
+const inputSwitchFestivalsModel = ref(props.changeShowFestivals);
+const inputSwitchWeatherModel = ref(props.changeShowWeather);
+const flocation: ComputedRef<FLocation> | undefined = inject("flocation");
+const longitude = flocation?.value.longitude;
+const latitude = flocation?.value.latitude;
+
+const data = reactive({
+  trayFestivalsModel: true,
+  trayWeatherModel: true,
+  trayWeekModel: true,
+  traySecondsModel: true,
+  focus_time: 40
+});
+const focusLabel = computed((): string => {
+  return "开始专注" + data.focus_time + "分钟";
+});
+onMounted(() => {
+  data.focus_time = store.focusTime;
+});
+const updateTheme = (value: string): void => {
+  store.changeThemeValue(value);
+};
+const updateFestivalsModel = (value: boolean): void => {
+  emit("update:changeShowFestivals", value);
+};
+const updateWeatherModel = (value: boolean): void => {
+  emit("update:changeShowWeather", value);
+};
+const changeLocalLocation = (): void => {
+  emit("updateLocation", {
+    longitude: longitude,
+    latitude: latitude
+  });
+};
+const updateTraySetting = (): void => {
+  window.ipcRenderer.send("updateTraySetting", {
+    trayFestivalsModel: data.trayFestivalsModel,
+    trayWeatherModel: data.trayWeatherModel,
+    trayWeekModel: data.trayWeekModel,
+    traySecondsModel: data.traySecondsModel
+  });
+};
+
+const focus = (): void => {
+  store.changeFocusTime(data.focus_time);
+  emit("focusClick");
+  window.ipcRenderer.send("show-focus-window");
+};
+const quit = (): void => {
+  window.ipcRenderer.send("quit");
+};
 </script>
