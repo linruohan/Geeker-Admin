@@ -1,9 +1,9 @@
 {
-  "name": "electron-vue-vite",
+  "name": "my-tool",
   "version": "28.0.0",
   "main": "dist-electron/main/index.js",
   "description": "Really simple Electron + Vue + Vite boilerplate.",
-  "author": "草鞋没号 <308487730@qq.com>",
+  "author": "mjt1220@126.com",
   "license": "MIT",
   "private": true,
   "keywords": [

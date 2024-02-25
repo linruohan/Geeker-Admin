@@ -22,14 +22,14 @@ import vueJsx from "@vitejs/plugin-vue-jsx";
 import eslintPlugin from "vite-plugin-eslint";
 import vueSetupExtend from "unplugin-vue-setup-extend-plus/vite";
 // https://vitejs.dev/config/
-export default defineConfig(({ command }: ConfigEnv): UserConfig => {
+export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   fs.rmSync("dist-electron", { recursive: true, force: true });
   const root = process.cwd();
-  const env = loadEnv(command, root);
+  const env = loadEnv(mode, root);
   const viteEnv = wrapperEnv(env);
 
-  const isServe = command === "serve";
-  const isBuild = command === "build";
+  const isServe = mode === "serve";
+  const isBuild = mode === "build";
   const sourcemap = isServe || !!process.env.VSCODE_DEBUG;
 
   return {
@@ -60,7 +60,8 @@ export default defineConfig(({ command }: ConfigEnv): UserConfig => {
       // vitePWA
       viteEnv.VITE_PWA && createVitePwa(viteEnv),
       // 是否生成包预览，分析依赖包大小做优化处理
-      viteEnv.VITE_REPORT && (visualizer({ filename: "stats.html", gzipSize: true, brotliSize: true }) as PluginOption),
+      viteEnv.VITE_REPORT &&
+        (visualizer({ filename: "stats.html", gzipSize: true, brotliSize: true }) as unknown as PluginOption),
       electron({
         main: {
           // Shortcut of `build.lib.entry`
