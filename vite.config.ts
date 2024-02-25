@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { fileURLToPath, URL } from "node:url";
+import { URL } from "node:url";
 import vue from "@vitejs/plugin-vue";
 import electron from "vite-plugin-electron/simple";
 import { defineConfig, loadEnv, ConfigEnv, UserConfig } from "vite";
@@ -111,10 +111,9 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     ],
     resolve: {
       alias: {
-        "@": fileURLToPath(new URL("./src", import.meta.url)),
+        "@": resolve(__dirname, "./src"),
         "vue-i18n": "vue-i18n/dist/vue-i18n.cjs.js"
-      },
-      extensions: [".js", ".ts", ".json"]
+      }
     },
     define: {
       __APP_INFO__: JSON.stringify(__APP_INFO__)
@@ -126,15 +125,11 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         }
       }
     },
-    // server: process.env.VSCODE_DEBUG && (() => {
     server: (() => {
       const url = new URL(pkg.debug.env.VITE_DEV_SERVER_URL);
       return {
         host: url.hostname,
         port: +url.port,
-        // open: viteEnv.VITE_OPEN,
-        cors: true,
-        // Load proxy configuration from .env.development
         proxy: createProxy(viteEnv.VITE_PROXY)
       };
     })(),
