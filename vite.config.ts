@@ -33,8 +33,6 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const sourcemap = isServe || !!process.env.VSCODE_DEBUG;
 
   return {
-    base: viteEnv.VITE_PUBLIC_PATH,
-    root,
     plugins: [
       vue(),
       // vue 可以使用 jsx/tsx 语法

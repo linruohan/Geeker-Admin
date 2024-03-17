@@ -53,8 +53,6 @@
     "@vicons/fa": "^0.12.0",
     "@vicons/fluent": "^0.12.0",
     "@vueuse/core": "^10.9.0",
-    "@wangeditor/editor": "^5.1.23",
-    "@wangeditor/editor-for-vue": "^5.1.12",
     "animate.css": "^4.1.1",
     "axios": "^1.6.7",
     "axios-cache-plugin": "^0.1.0",
