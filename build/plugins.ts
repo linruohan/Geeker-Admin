@@ -29,7 +29,6 @@ export const createVitePlugins = (viteEnv: ViteEnv): (PluginOption | PluginOptio
     // 注入变量到 html 文件
     createHtmlPlugin({
       minify: true,
-      viteNext: true,
       inject: {
         data: { title: VITE_GLOB_APP_TITLE }
       }
@@ -42,7 +41,7 @@ export const createVitePlugins = (viteEnv: ViteEnv): (PluginOption | PluginOptio
     // vitePWA
     VITE_PWA && createVitePwa(viteEnv),
     // 是否生成包预览，分析依赖包大小做优化处理
-    VITE_REPORT && (visualizer({ filename: "stats.html", gzipSize: true, brotliSize: true }) as unknown as PluginOption)
+    VITE_REPORT && (visualizer({ filename: "stats.html", gzipSize: true, brotliSize: true }) as PluginOption)
   ];
 };
 

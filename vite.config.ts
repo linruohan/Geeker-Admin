@@ -37,6 +37,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     root,
     plugins: [
       vue(),
+      // vue 可以使用 jsx/tsx 语法
       vueJsx(),
       // esLint 报错信息显示在浏览器界面上
       eslintPlugin(),
