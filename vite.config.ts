@@ -1,5 +1,4 @@
 import fs from "node:fs";
-import { URL } from "node:url";
 import vue from "@vitejs/plugin-vue";
 import electron from "vite-plugin-electron/simple";
 import { defineConfig, loadEnv, ConfigEnv, UserConfig } from "vite";
@@ -27,15 +26,13 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const root = process.cwd();
   const env = loadEnv(mode, root);
   const viteEnv = wrapperEnv(env);
-
   const isServe = mode === "serve";
   const isBuild = mode === "build";
   const sourcemap = isServe || !!process.env.VSCODE_DEBUG;
 
   return {
     plugins: [
-      vue(),
-      // vue 可以使用 jsx/tsx 语法
+      vue(), // vue 可以使用 jsx/tsx 语法
       vueJsx(),
       // esLint 报错信息显示在浏览器界面上
       eslintPlugin(),

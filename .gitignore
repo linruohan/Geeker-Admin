@@ -9,6 +9,7 @@ lerna-debug.log*
 
 node_modules
 dist
+dist-ssr
 dist-electron
 release
 dist-ssr
@@ -26,3 +27,8 @@ stats.html
 *.njsproj
 *.sln
 *.sw?
+
+# lockfile
+package-lock.json
+pnpm-lock.yaml
+yarn.lock

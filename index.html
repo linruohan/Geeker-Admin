@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
     <title><%- title %></title>
   </head>
   <body>
@@ -92,12 +93,12 @@
       </div>
     </div>
     <script>
-      const globalState = JSON.parse(window.localStorage.getItem("geeker-global"));
+      const globalState = JSON.parse(window.localStorage.getItem('geeker-global'));
       if (globalState) {
-        const dot = document.querySelectorAll(".dot i");
-        const html = document.querySelector("html");
+        const dot = document.querySelectorAll('.dot i');
+        const html = document.querySelector('html');
         dot.forEach(item => (item.style.background = globalState.primary));
-        if (globalState.isDark) html.style.background = "#141414";
+        if (globalState.isDark) html.style.background = '#141414';
       }
     </script>
     <script type="module" src="/src/main.ts"></script>
