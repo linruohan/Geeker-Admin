@@ -7,6 +7,7 @@ import { createProxy } from "./build/proxy";
 import { createCompression, createVitePwa } from "./build/plugins";
 import pkg from "./package.json";
 import dayjs from "dayjs";
+
 const { dependencies, devDependencies, name, version } = pkg;
 const __APP_INFO__ = {
   pkg: { dependencies, devDependencies, name, version },
@@ -20,7 +21,7 @@ import { createSvgIconsPlugin } from "vite-plugin-svg-icons";
 import vueJsx from "@vitejs/plugin-vue-jsx";
 import eslintPlugin from "vite-plugin-eslint";
 import vueSetupExtend from "unplugin-vue-setup-extend-plus/vite";
-// https://vitejs.dev/config/
+// @see: https://vitejs.dev/config/
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   fs.rmSync("dist-electron", { recursive: true, force: true });
   const root = process.cwd();
@@ -29,8 +30,9 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const isServe = mode === "serve";
   const isBuild = mode === "build";
   const sourcemap = isServe || !!process.env.VSCODE_DEBUG;
-
   return {
+    // base: viteEnv.VITE_PUBLIC_PATH,
+    // root,
     plugins: [
       vue(), // vue 可以使用 jsx/tsx 语法
       vueJsx(),

@@ -38,9 +38,9 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "auto-imports.d.ts",
-    "build/**/*.ts",
-    "build/**/*.d.ts",
-    "vite.config.ts"
+    // "build/**/*.ts",
+    "build/**/*.d.ts"
+    // "vite.config.ts"
   ],
   "exclude": ["node_modules", "dist", "**/*.js"],
   "references": [{ "path": "./tsconfig.node.json" }]
